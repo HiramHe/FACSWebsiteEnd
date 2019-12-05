@@ -4,11 +4,15 @@ import FACSWebsiteEnd.Entity.FileInfo;
 import FACSWebsiteEnd.common.Constant;
 import FACSWebsiteEnd.service.FacsService;
 import FACSWebsiteEnd.service.FileService;
+import FACSWebsiteEnd.utils.CommandUtils;
 import FACSWebsiteEnd.utils.RemoteUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: HiramHe
@@ -26,7 +30,7 @@ public class FacsServiceImpl implements FacsService {
     public FileInfo saveSequenceToFile(String sequence) {
 
         // 将序列文本输出为指定文件
-        String extension = Constant.EXTENSION;
+        String extension = Constant.FASTTQ;
         FileInfo fileInfo = fileService.saveTextToFile(sequence, extension);
         return fileInfo;
 
@@ -39,22 +43,29 @@ public class FacsServiceImpl implements FacsService {
     }
 
     @Override
-    public Boolean callShell(String sequenceType, String mode, String read_1) {
+    public Boolean callShell(FileInfo fileInfo, String dataType) {
+
+        String command = "";
+
+        Map<String,Object> commandParams = new HashMap<String, Object>();
+
+
+        if (Constant.PEPTIDES.equals(dataType)){
+            commandParams.put("--fasta",fileInfo.getFullpath());
+            commandParams.put("--mode","p");
+            commandParams.put("-t",1);
+            commandParams.put("--block","10MB");
+            commandParams.put("--outfolder","outfolder");
+
+            command = CommandUtils.buildShellCommand(commandParams);
+        }
 
         String ip = "39.106.68.204";
         int port = 22;
         String username = "HiramHe";
         String password = "hiram1024";
 
-        String space = " ";
-
-        String command1 = "bash"
-                +space+"helloWorld04.sh"
-                +space+sequenceType
-                +space+mode
-                +space+read_1;
-
-        RemoteUtils.remoteInvokeShell(ip,port,username,password,command1);
+        RemoteUtils.remoteInvokeShell(ip,port,username,password,command);
 
         return null;
     }

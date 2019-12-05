@@ -1,6 +1,6 @@
 package FACSWebsiteEnd.controller;
 
-import FACSWebsiteEnd.Entity.DataUploaded;
+import FACSWebsiteEnd.Entity.PredictionForm;
 import FACSWebsiteEnd.Entity.FileInfo;
 import FACSWebsiteEnd.common.Constant;
 import FACSWebsiteEnd.common.ResultCode;
@@ -32,29 +32,29 @@ public class FacsController {
     private FacsService facsService;
 
     @PostMapping("/prediction")
-    public ResultObject analysis(DataUploaded dataUploaded){
+    public ResultObject analysis(PredictionForm predictionForm){
 
         FileInfo fileInfo;
 
         // 校验上传的文本和文件
-        if (!EffectiveCheckUtils.strEffectiveCheck(dataUploaded.getSequence())
-                && !EffectiveCheckUtils.fileEffectiveCheck(dataUploaded.getFile())){
+        if (!EffectiveCheckUtils.strEffectiveCheck(predictionForm.getTextData())
+                && !EffectiveCheckUtils.fileEffectiveCheck(predictionForm.getFile())){
             return ResultObject.failure(ResultCode.DATA_IS_EMPTY);
         }
 
         // 上传的是文本
-        if (EffectiveCheckUtils.strEffectiveCheck(dataUploaded.getSequence())){
-            fileInfo = facsService.saveSequenceToFile(dataUploaded.getSequence());
+        if (EffectiveCheckUtils.strEffectiveCheck(predictionForm.getTextData())){
+            fileInfo = facsService.saveSequenceToFile(predictionForm.getTextData());
         } else {
             // 上传的是文件
-            MultipartFile file = dataUploaded.getFile();
+            MultipartFile file = predictionForm.getFile();
             Map fileInformation = FileUtils.getFileInformation(file);
 
             String type = fileInformation.get("type").toString();
 
             if (type != null){
                 // 判断是否是指定类型的文件
-                if (Constant.EXTENSION.equals(type)){
+                if (Constant.FASTTQ.equals(type)){
                     fileInfo = facsService.saveFile(file);
                 }else {
                     return ResultObject.failure(ResultCode.FILETYPE_NOT_FASTQ_ERROR);
@@ -65,11 +65,12 @@ public class FacsController {
 
         }
 
-        //todo 调用脚本
-        String sequenceType = "protein";
-        String mode = "r";
-        String read_1 = "pathOfRead_1";
-        facsService.callShell(sequenceType,mode,read_1);
+        // 校验数据类型是否为空
+        if (!EffectiveCheckUtils.strEffectiveCheck(predictionForm.getDataType())){
+            return ResultObject.failure(ResultCode.DATATYPE_UNSPECIFIED);
+        }
+
+        facsService.callShell(fileInfo,predictionForm.getDataType());
 
         return ResultObject.success(fileInfo);
     }
