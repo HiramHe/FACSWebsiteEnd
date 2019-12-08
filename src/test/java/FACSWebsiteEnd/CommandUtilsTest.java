@@ -1,5 +1,6 @@
 package FACSWebsiteEnd;
 
+import FACSWebsiteEnd.common.Constant;
 import FACSWebsiteEnd.utils.CommandUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,13 +25,18 @@ public class CommandUtilsTest {
         String command = "";
 
         Map<String,Object> commandParams = new HashMap<String, Object>();
-        commandParams.put("--fasta","fasta");
-        commandParams.put("--mode","p");
-        commandParams.put("-t",1);
-        commandParams.put("--block","10MB");
-        commandParams.put("--outfolder","outfolder");
+        String bash = Constant.BASH;
+        String shellPath = Constant.FACS_HOME + Constant.FACS_SHELL;
 
-        command = CommandUtils.buildShellCommand(commandParams);
+        commandParams.put("--mode","p");
+        commandParams.put("--fasta","fasta");
+        commandParams.put("-t",1);
+        commandParams.put("--block",10000000);
+        commandParams.put("--outfolder","facsOut");
+
+        command = CommandUtils.buildShellCommand(bash,shellPath,commandParams);
+
+        command = CommandUtils.buildShellCommand(bash,shellPath,commandParams);
 
         System.out.println(command);
     }

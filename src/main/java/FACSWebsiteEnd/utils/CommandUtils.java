@@ -1,5 +1,9 @@
 package FACSWebsiteEnd.utils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Map;
 
 /**
@@ -9,17 +13,33 @@ import java.util.Map;
  */
 public class CommandUtils {
 
-    public static String buildShellCommand(Map<String,Object> commandParams){
+    public static String buildShellCommand(String bash, String shellPath, Map<String,Object> commandParams){
 
-        String bash = "bash";
         String space = " ";
-        String command;
 
-        command = bash;
+        String command = bash +space + shellPath;
         for (Map.Entry<String,Object> entry:commandParams.entrySet()){
             command += space + entry.getKey() + space + entry.getValue();
         }
 
         return command;
+    }
+
+    public static void executeLocalScript(String command) {
+
+        Process process = null;
+        try {
+            process = Runtime.getRuntime().exec(command);
+            InputStream inputStream  = process.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream,"gbk"));
+
+            String line = null;
+            while ((line = bufferedReader.readLine())!=null){
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

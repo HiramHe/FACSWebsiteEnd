@@ -19,6 +19,9 @@ public enum ResultCode {
     FILETYPE_NOT_FASTQ_ERROR(10005, "非fastq文件."),
     FILETYPE_UNKNOWN_ERROR(10006, "未知文件."),
     DATATYPE_UNSPECIFIED(10007, "未指定数据类型."),
+    FILETYPE_NOT_FASTA_OR_FA_ERROR(10008, "上传的文件格式需为fasta或者fa."),
+    FILETYPE__ERROR(10009, "文件类型错误."),
+    DATATYPE__EMPTY(10010, "请选择数据类型."),
 
     /* 反馈相关： 20001-29999*/
     FEEDBACK_SUCCESS(20001,"反馈成功"),
