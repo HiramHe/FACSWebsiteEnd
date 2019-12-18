@@ -7,8 +7,10 @@ import FACSWebsiteEnd.service.FacsService;
 import FACSWebsiteEnd.service.FileService;
 import FACSWebsiteEnd.utils.CommandUtils;
 import FACSWebsiteEnd.utils.CommonUtils;
+import FACSWebsiteEnd.utils.FacsUtils;
 import FACSWebsiteEnd.utils.RemoteUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,67 +28,94 @@ import java.util.Map;
 public class FacsServiceImpl implements FacsService {
 
     @Autowired
-    FileService fileService;
+    private FileService fileService;
+
+    @Value("${facsHome}")
+    private String facsHome;
+    @Value("${enableRemote}")
+    private Boolean enableRemote;
+    @Value("${remote_server_ip}")
+    private String ip;
+    @Value("${remote_server_port}")
+    private Integer port;
+    @Value("${remote_server_username}")
+    private String username;
+    @Value("${remote_server_password}")
+    private String password;
 
     @Override
-    public FileInfo saveSequenceToFile(String sequence, String dataType) {
-
-        // 将序列文本输出为指定文件
-        String extension = "";
-        if (Constant.PEPTIDES.equals(dataType)){
-            extension = Constant.FA;
-        } else if (Constant.NUCLEOTIDE.equals(dataType)){
-            extension = Constant.FASTTQ;
-        }
-        FileInfo fileInfo = fileService.saveTextToFile(sequence, extension);
-        return fileInfo;
-
-    }
-
-    @Override
-    public FileInfo saveFile(MultipartFile multipartFile) {
-        FileInfo fileInfo = fileService.upload(multipartFile);
-        return fileInfo;
-    }
-
-    @Override
-    public List<Object> callShell(FileInfo fileInfo, String dataType) {
+    public String callShellScript(FileInfo fileInfo, String currentOutDir, String dataType) {
 
         String command = "";
 
         Map<String,Object> commandParams = new HashMap<String, Object>();
         String bash = Constant.BASH;
-        String shellPath = Constant.FACS_HOME + Constant.FACS_SHELL;
+        String shellPath = facsHome + Constant.FACS_SHELL;
 
-        String outfolderName = CommonUtils.getCurrentTime();
-        String outfolderPath = Constant.FACS_OUT_PARENT;
+        String tempFolderName = Constant.FACS_TEMP_FOLDER_PREFIX + fileInfo.getFilenameWithOutExtension();
+
+        String inputFilePath = fileInfo.getPath();
+        String outputFilePath = "";
 
         if (Constant.PEPTIDES.equals(dataType)){
+            // run FACS on peptides
+
             commandParams.put("--mode","p");
-            commandParams.put("--fasta",fileInfo.getFullpath());
-            commandParams.put("-t",1);
-            commandParams.put("--block",1000000);
-            commandParams.put("--outfolder",outfolderPath);
+            this.commonParams(commandParams,inputFilePath,currentOutDir,tempFolderName);
 
             command = CommandUtils.buildShellCommand(bash,shellPath,commandParams);
 //            System.out.println(command);
 
-            // 远程执行
-            //RemoteUtils.remoteInvokeShell(command);
+            this.execute(command);
 
-            // 本地执行
-            CommandUtils.executeLocalScript(command);
+            outputFilePath = currentOutDir + Constant.FACS_OUT_FILENAME;
 
-            // 读取tsv结果文件
-            String fullFilePath = outfolderPath + "/" + Constant.FACS_OUT_FILENAME;
-            List<Object> objects = fileService.readTsvGzToObject(fullFilePath, new FacsOutTsv());
-            return objects;
+        } else if(Constant.CONTIGS.equals(dataType)){
+            // run FACS on contigs
 
-        } else if(Constant.NUCLEOTIDE.equals(dataType)){
-            // todo
-            return null;
+            commandParams.put("--mode","c");
+            this.commonParams(commandParams,inputFilePath,currentOutDir,tempFolderName);
+
+            command = CommandUtils.buildShellCommand(bash,shellPath,commandParams);
+//            System.out.println(command);
+
+            this.execute(command);
+            outputFilePath = currentOutDir + Constant.FACS_OUT_FILENAME;
+
         }
 
+        return outputFilePath;
+    }
+
+    private void commonParams(Map<String,Object> commandParams,String inputFilePath,String currentOutDir, String tempFolderName){
+        commandParams.put("--fasta",inputFilePath);
+        commandParams.put("-t",1);
+        commandParams.put("--block",100000);
+        commandParams.put("--outfolder",currentOutDir);
+        commandParams.put("--tmp",tempFolderName);
+    }
+
+    private void execute(String command){
+        if (!enableRemote){
+            // 本地执行
+            CommandUtils.executeLocalCommand(command);
+        } else {
+            // todo：远程执行
+            RemoteUtils.remoteInvokeShell(ip,port,username,password,command);
+        }
+    }
+
+    @Override
+    public List<Object> readLocalResults(String filePath) {
+
+        // 读取tsv结果文件
+        List<Object> objects = fileService.readLocalTsvGzToObject(filePath, new FacsOutTsv());
+        return objects;
+    }
+
+    @Override
+    public List<Object> readRemoteResults(String outfolderPath, String filename) {
+        // todo
         return null;
     }
 }

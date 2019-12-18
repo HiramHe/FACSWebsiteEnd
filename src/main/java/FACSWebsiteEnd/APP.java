@@ -13,6 +13,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class APP {
 
     public static void main(String[] args) {
-        SpringApplication.run(APP.class,args);
+        SpringApplication springApplication = new SpringApplication(APP.class);
+        // 将命令行参数的优先级设置为最高。
+        springApplication.setAddCommandLineProperties(true);
+        springApplication.run(args);
     }
 }

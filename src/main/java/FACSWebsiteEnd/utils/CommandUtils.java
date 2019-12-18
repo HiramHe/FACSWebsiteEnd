@@ -25,7 +25,7 @@ public class CommandUtils {
         return command;
     }
 
-    public static void executeLocalScript(String command) {
+    public static void executeLocalCommand(String command) {
 
         Process process = null;
         try {
@@ -42,4 +42,23 @@ public class CommandUtils {
         }
 
     }
+
+    public static void executeLocalCommandArray(String[] command) {
+
+        Process process = null;
+        try {
+            process = Runtime.getRuntime().exec(command);
+            InputStream inputStream  = process.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream,"gbk"));
+
+            String line = null;
+            while ((line = bufferedReader.readLine())!=null){
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }

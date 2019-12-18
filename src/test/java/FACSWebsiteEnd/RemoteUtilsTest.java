@@ -1,11 +1,13 @@
 package FACSWebsiteEnd;
 
+import FACSWebsiteEnd.common.Constant;
 import FACSWebsiteEnd.utils.CommandUtils;
 import FACSWebsiteEnd.utils.RemoteUtils;
 import com.jcraft.jsch.JSch;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -23,21 +25,14 @@ import java.util.zip.GZIPInputStream;
 @SpringBootTest
 public class RemoteUtilsTest {
 
+    @Value("${remote_server_ip}")
     private String ip;
-    private int port;
+    @Value("${remote_server_port}")
+    private Integer port;
+    @Value("${remote_server_username}")
     private String username;
+    @Value("${remote_server_password}")
     private String password;
-
-    /**
-     * 初始化连接参数
-     */
-    @Before
-    public void initParam(){
-        this.ip = "39.106.68.204";
-        this.port = 22;
-        this.username = "HiramHe";
-        this.password = "hiram1024";
-    }
 
     /**
      * 远程执行命令
@@ -108,7 +103,7 @@ public class RemoteUtilsTest {
         String shellPath = "./FACS-master/FACS.sh";
         command1 = CommandUtils.buildShellCommand(bash,shellPath,commandParams1);
 
-        RemoteUtils.remoteInvokeShell(ip,port,username,password,command1);
+//        RemoteUtils.remoteInvokeShell(ip,port,username,password,command1);
     }
 
     public void testjsch(){
