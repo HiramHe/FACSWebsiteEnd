@@ -1,7 +1,13 @@
 package FACSWebsiteEnd;
 
+import FACSWebsiteEnd.config.PipelineProperties;
+import FACSWebsiteEnd.config.RemoteProperties;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+import java.util.Scanner;
 
 /**
  * @Author: HiramHe

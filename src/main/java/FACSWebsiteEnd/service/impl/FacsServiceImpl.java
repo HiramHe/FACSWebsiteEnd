@@ -6,13 +6,9 @@ import FACSWebsiteEnd.common.Constant;
 import FACSWebsiteEnd.service.FacsService;
 import FACSWebsiteEnd.service.FileService;
 import FACSWebsiteEnd.utils.CommandUtils;
-import FACSWebsiteEnd.utils.CommonUtils;
-import FACSWebsiteEnd.utils.FacsUtils;
-import FACSWebsiteEnd.utils.RemoteUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,27 +26,14 @@ public class FacsServiceImpl implements FacsService {
     @Autowired
     private FileService fileService;
 
-    @Value("${facsHome}")
-    private String facsHome;
-    @Value("${enableRemote}")
-    private Boolean enableRemote;
-    @Value("${remote_server_ip}")
-    private String ip;
-    @Value("${remote_server_port}")
-    private Integer port;
-    @Value("${remote_server_username}")
-    private String username;
-    @Value("${remote_server_password}")
-    private String password;
-
     @Override
-    public String callShellScript(FileInfo fileInfo, String currentOutDir, String dataType) {
+    public String callPipeline(String pipelineHome, FileInfo fileInfo, String currentOutDir, String dataType, Boolean enableRemote) {
 
         String command = "";
 
         Map<String,Object> commandParams = new HashMap<String, Object>();
         String bash = Constant.BASH;
-        String shellPath = facsHome + Constant.FACS_SHELL;
+        String shellPath = pipelineHome + Constant.FACS_SHELL;
 
         String tempFolderName = Constant.FACS_TEMP_FOLDER_PREFIX + fileInfo.getFilenameWithOutExtension();
 
@@ -66,7 +49,7 @@ public class FacsServiceImpl implements FacsService {
             command = CommandUtils.buildShellCommand(bash,shellPath,commandParams);
 //            System.out.println(command);
 
-            this.execute(command);
+            this.execute(command,enableRemote);
 
             outputFilePath = currentOutDir + Constant.FACS_OUT_FILENAME;
 
@@ -79,7 +62,7 @@ public class FacsServiceImpl implements FacsService {
             command = CommandUtils.buildShellCommand(bash,shellPath,commandParams);
 //            System.out.println(command);
 
-            this.execute(command);
+            this.execute(command,enableRemote);
             outputFilePath = currentOutDir + Constant.FACS_OUT_FILENAME;
 
         }
@@ -95,18 +78,17 @@ public class FacsServiceImpl implements FacsService {
         commandParams.put("--tmp",tempFolderName);
     }
 
-    private void execute(String command){
+    private void execute(String command,Boolean enableRemote){
         if (!enableRemote){
             // 本地执行
-            CommandUtils.executeLocalCommand(command);
+            CommandUtils.executeCommandLocally(command);
         } else {
             // todo：远程执行
-            RemoteUtils.remoteInvokeShell(ip,port,username,password,command);
         }
     }
 
     @Override
-    public List<Object> readLocalResults(String filePath) {
+    public List<Object> readResultsLocally(String filePath) {
 
         // 读取tsv结果文件
         List<Object> objects = fileService.readLocalTsvGzToObject(filePath, new FacsOutTsv());
@@ -114,7 +96,7 @@ public class FacsServiceImpl implements FacsService {
     }
 
     @Override
-    public List<Object> readRemoteResults(String outfolderPath, String filename) {
+    public List<Object> readResultsRemotely(String outfolderPath, String filename) {
         // todo
         return null;
     }
